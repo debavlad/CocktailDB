@@ -11,13 +11,13 @@ import UIKit
 final class FilterCell: UICollectionViewCell {
   override var isSelected: Bool {
     didSet {
-      checkImageView.isHidden = !isSelected
+      checkImageView.isHidden = isSelected
     }
   }
   let titleLabel: UILabel = {
     let label = UILabel()
     label.font = .systemFont(ofSize: 16)
-    label.textColor = .gray
+    label.textColor = .systemGray
     return label
   }()
   let checkImageView: UIImageView = {
@@ -25,8 +25,7 @@ final class FilterCell: UICollectionViewCell {
       systemName: "checkmark",
       withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .regular))
     let imageView = UIImageView(image: image)
-    imageView.tintColor = .black
-    imageView.isHidden = true
+    imageView.tintColor = .label
     return imageView
   }()
 

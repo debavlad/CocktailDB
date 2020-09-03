@@ -8,7 +8,7 @@
 
 import UIKit
 
-// TODO: Images cache
+// TODO: Image cache
 final class DrinkController: UIViewController {
   let collectionView: UICollectionView = {
     let layout = UICollectionViewFlowLayout()
@@ -16,7 +16,7 @@ final class DrinkController: UIViewController {
     let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
     collectionView.register(DrinkCell.self, forCellWithReuseIdentifier: "Cell")
     collectionView.register(SectionHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "Header")
-    collectionView.backgroundColor = .white
+    collectionView.backgroundColor = .systemBackground
     return collectionView
   }()
   var categories: [Category] = []
@@ -24,8 +24,11 @@ final class DrinkController: UIViewController {
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    view.backgroundColor = .white
+    view.backgroundColor = .systemBackground
+    navigationController?.navigationBar.tintColor = .systemGray2
+    title = "Drinks"
     setupCollectionView()
+    setupBarButton()
 
     fetchCategories { (received) in
       guard received else { return }
@@ -33,6 +36,12 @@ final class DrinkController: UIViewController {
         self.collectionView.reloadData()
       }
     }
+  }
+
+  @objc func presentFilterController() {
+    let filterController = FilterController()
+    filterController.categories = categories.map { $0.name }
+    navigationController?.pushViewController(filterController, animated: true)
   }
 
   func setupCollectionView() {
@@ -46,6 +55,12 @@ final class DrinkController: UIViewController {
       collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
       collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
     ])
+  }
+
+  func setupBarButton() {
+    let barButton = UIBarButtonItem(image: UIImage(systemName: "line.horizontal.3.decrease.circle", withConfiguration: UIImage.SymbolConfiguration(pointSize: 19, weight: .light)), style: .plain, target: self, action: #selector(presentFilterController))
+    barButton.tintColor = .systemGray2
+    navigationItem.rightBarButtonItem = barButton
   }
 }
 

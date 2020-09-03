@@ -9,33 +9,30 @@
 import UIKit
 
 final class FilterController: UIViewController {
-  var categories: [Category] = []
+  var categories: [String] = []
   let collectionView: UICollectionView = {
     let layout = UICollectionViewFlowLayout()
     layout.sectionInset.bottom = 100
     let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
     collectionView.register(FilterCell.self, forCellWithReuseIdentifier: "Cell")
-    collectionView.backgroundColor = .white
+    collectionView.backgroundColor = .systemBackground
     return collectionView
   }()
   let applyButton: UIButton = {
     let button = UIButton()
     button.setTitle("Apply", for: .normal)
-    button.setTitleColor(.white, for: .normal)
-    button.backgroundColor = .black
+    button.setTitleColor(.systemBackground, for: .normal)
+    button.backgroundColor = .label
     button.layer.cornerRadius = 12
     return button
   }()
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    view.backgroundColor = .systemYellow
+    title = "Filters"
+    navigationItem.largeTitleDisplayMode = .never
     setupCollectionView()
     setupButton()
-
-    fetchCategories { (retrieved) in
-      self.collectionView.reloadData()
-    }
   }
 
   func setupCollectionView() {
@@ -72,7 +69,7 @@ extension FilterController: UICollectionViewDataSource, UICollectionViewDelegate
 
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! FilterCell
-    cell.titleLabel.text = categories[indexPath.item].name
+    cell.titleLabel.text = categories[indexPath.item]
     return cell
   }
 }
@@ -89,23 +86,5 @@ extension FilterController: UICollectionViewDelegateFlowLayout {
 
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
     return 0
-  }
-}
-
-// MARK: - Remove later
-extension FilterController {
-  func fetchCategories(completion: @escaping (_ success: Bool) -> Void) {
-    APIManager.shared.requestCategories { (dict) in
-      guard let array = dict?["drinks"] as? [[String: String]] else {
-        DispatchQueue.main.async { completion(false) }
-        return
-      }
-
-      for json in array {
-        let category = Category(json["strCategory"]!)
-        self.categories.append(category)
-      }
-      DispatchQueue.main.async { completion(true) }
-    }
   }
 }

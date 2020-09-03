@@ -12,7 +12,7 @@ final class SectionHeader: UICollectionReusableView {
   let textLabel: UILabel = {
     let label = UILabel()
     label.font = .systemFont(ofSize: 14)
-    label.textColor = .gray
+    label.textColor = .systemGray
     return label
   }()
 
