@@ -12,16 +12,27 @@ final class FilterController: UIViewController {
   var categories: [Category] = []
   let collectionView: UICollectionView = {
     let layout = UICollectionViewFlowLayout()
+    layout.sectionInset.bottom = 100
     let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
     collectionView.register(FilterCell.self, forCellWithReuseIdentifier: "Cell")
     collectionView.backgroundColor = .white
     return collectionView
+  }()
+  let applyButton: UIButton = {
+    let button = UIButton()
+    button.setTitle("Apply", for: .normal)
+    button.setTitleColor(.white, for: .normal)
+    button.backgroundColor = .black
+    button.layer.cornerRadius = 12
+    return button
   }()
 
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = .systemYellow
     setupCollectionView()
+    setupButton()
+
     fetchCategories { (retrieved) in
       self.collectionView.reloadData()
     }
@@ -38,6 +49,17 @@ final class FilterController: UIViewController {
       collectionView.topAnchor.constraint(equalTo: view.topAnchor),
       collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
       collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+    ])
+  }
+
+  func setupButton() {
+    view.addSubview(applyButton)
+    applyButton.translatesAutoresizingMaskIntoConstraints = false
+    NSLayoutConstraint.activate([
+      applyButton.widthAnchor.constraint(equalTo: view.widthAnchor, constant: -54),
+      applyButton.heightAnchor.constraint(equalToConstant: 53),
+      applyButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+      applyButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -27)
     ])
   }
 }
