@@ -8,7 +8,7 @@
 
 import Foundation
 
-class Category {
+final class Category {
   let name: String
   var drinks: [Drink] = []
 
