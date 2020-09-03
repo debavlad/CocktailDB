@@ -9,7 +9,6 @@
 import UIKit
 
 // TODO: Images cache
-
 final class DrinkController: UIViewController {
   let collectionView: UICollectionView = {
     let layout = UICollectionViewFlowLayout()
@@ -21,18 +20,17 @@ final class DrinkController: UIViewController {
     return collectionView
   }()
   var categories: [Category] = []
+  var lastCategoryId = 0
 
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = .white
     setupCollectionView()
+
     fetchCategories { (received) in
-      if received {
-        self.fetchDrinks(at: 0) {
-          DispatchQueue.main.async {
-            self.collectionView.reloadData()
-          }
-        }
+      guard received else { return }
+      self.fetchDrinks(at: self.lastCategoryId) {
+        self.collectionView.reloadData()
       }
     }
   }
@@ -51,20 +49,21 @@ final class DrinkController: UIViewController {
   }
 }
 
-// MARK: - Fetching data
+// MARK: - Fetching data via APIManager
 extension DrinkController {
   func fetchCategories(completion: @escaping (_ success: Bool) -> Void) {
     APIManager.shared.requestCategories { (dict) in
       guard let array = dict?["drinks"] as? [[String: String]] else {
-        completion(false)
+        DispatchQueue.main.async { completion(false) }
         return
       }
-
       for json in array {
         let category = Category(json["strCategory"]!)
         self.categories.append(category)
       }
-      completion(true)
+      DispatchQueue.main.async {
+        completion(true)
+      }
     }
   }
 
@@ -74,14 +73,15 @@ extension DrinkController {
       guard let array = dict?["drinks"] as? [[String: String]] else {
         return
       }
-
       for json in array {
         let drink = Drink(
           name: json["strDrink"]!,
           thumb: json["strDrinkThumb"]!)
         self.categories[id].drinks.append(drink)
       }
-      completion()
+      DispatchQueue.main.async {
+        completion()
+      }
     }
   }
 }
@@ -112,7 +112,19 @@ extension DrinkController: UICollectionViewDataSource, UICollectionViewDelegate 
     return cell
   }
 
-  func downloadImage(from urlString: String, completion: @escaping (UIImage?) -> Void) {
+  func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+    guard indexPath.section == lastCategoryId else { return }
+    if indexPath.item == categories[indexPath.section].drinks.count - 1 {
+      lastCategoryId += 1
+      fetchDrinks(at: lastCategoryId) {
+        DispatchQueue.main.async {
+          self.collectionView.reloadData()
+        }
+      }
+    }
+  }
+
+  private func downloadImage(from urlString: String, completion: @escaping (UIImage?) -> Void) {
     let url = URL(string: "\(urlString)/preview")!
     URLSession.shared.dataTask(with: url) { data, response, error in
       guard let data = data, error == nil else { return }
