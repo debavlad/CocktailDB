@@ -8,7 +8,9 @@
 
 import UIKit
 
-final class ViewController: UIViewController {
+// TODO: Images cache
+
+final class DrinkController: UIViewController {
   let collectionView: UICollectionView = {
     let layout = UICollectionViewFlowLayout()
     layout.headerReferenceSize.height = 60
@@ -50,7 +52,7 @@ final class ViewController: UIViewController {
 }
 
 // MARK: - Fetching data
-extension ViewController {
+extension DrinkController {
   func fetchCategories(completion: @escaping (_ success: Bool) -> Void) {
     APIManager.shared.requestCategories { (dict) in
       guard let array = dict?["drinks"] as? [[String: String]] else {
@@ -85,7 +87,7 @@ extension ViewController {
 }
 
 // MARK: - UICollectionViewDataSource, UICollectionViewDelegate
-extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate {
+extension DrinkController: UICollectionViewDataSource, UICollectionViewDelegate {
   func numberOfSections(in collectionView: UICollectionView) -> Int {
     return categories.count
   }
@@ -122,7 +124,7 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate {
 }
 
 // MARK: - UICollectionViewDelegateFlowLayout
-extension ViewController: UICollectionViewDelegateFlowLayout {
+extension DrinkController: UICollectionViewDelegateFlowLayout {
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
     return CGSize(width: view.frame.width, height: 100)
   }

@@ -16,8 +16,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
   func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
     if let windowScene = scene as? UIWindowScene {
       let window = UIWindow(windowScene: windowScene)
-      let viewController = ViewController()
-      window.rootViewController = viewController
+//      let drinkController = DrinkController()
+      let filterController = FilterController()
+      window.rootViewController = filterController
 
       self.window = window
       window.makeKeyAndVisible()
