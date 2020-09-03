@@ -20,17 +20,15 @@ final class FilterController: UIViewController {
   }()
   let applyButton: UIButton = {
     let button = UIButton()
-    button.setTitle("Apply", for: .normal)
+    button.setTitle("APPLY", for: .normal)
+    button.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
     button.setTitleColor(.systemBackground, for: .normal)
     button.backgroundColor = .label
-    button.layer.cornerRadius = 12
     return button
   }()
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    title = "Filters"
-    navigationItem.largeTitleDisplayMode = .never
     setupCollectionView()
     setupButton()
   }

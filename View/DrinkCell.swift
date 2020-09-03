@@ -12,13 +12,11 @@ final class DrinkCell: UICollectionViewCell {
   let imageView: UIImageView = {
     let imageView = UIImageView()
     imageView.contentMode = .scaleAspectFill
-    imageView.layer.cornerRadius = 6
-    imageView.layer.masksToBounds = true
     return imageView
   }()
   let titleLabel: UILabel = {
     let label = UILabel()
-    label.font = .systemFont(ofSize: 18, weight: .light)
+    label.font = .systemFont(ofSize: 16, weight: .regular)
     label.textColor = .systemGray
     label.lineBreakMode = .byWordWrapping
     label.numberOfLines = 3

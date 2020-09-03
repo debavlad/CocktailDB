@@ -19,20 +19,16 @@ final class DrinkController: UIViewController {
     collectionView.backgroundColor = .systemBackground
     return collectionView
   }()
-  var categories: [Category] = []
   var lastCategoryId = 0
 
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = .systemBackground
-    navigationController?.navigationBar.tintColor = .systemGray2
-    title = "Drinks"
     setupCollectionView()
     setupBarButton()
 
-    fetchCategories { (received) in
-      guard received else { return }
-      self.fetchDrinks(at: self.lastCategoryId) {
+    APIManager.shared.fetchCategories {
+      APIManager.shared.fetchDrinks(withCategoryId: self.lastCategoryId) {
         self.collectionView.reloadData()
       }
     }
@@ -40,7 +36,7 @@ final class DrinkController: UIViewController {
 
   @objc func presentFilterController() {
     let filterController = FilterController()
-    filterController.categories = categories.map { $0.name }
+    filterController.categories = APIManager.shared.categories.map { $0.name }
     navigationController?.pushViewController(filterController, animated: true)
   }
 
@@ -64,62 +60,25 @@ final class DrinkController: UIViewController {
   }
 }
 
-// MARK: - Fetching data via APIManager
-extension DrinkController {
-  func fetchCategories(completion: @escaping (_ success: Bool) -> Void) {
-    APIManager.shared.requestCategories { (dict) in
-      guard let array = dict?["drinks"] as? [[String: String]] else {
-        DispatchQueue.main.async { completion(false) }
-        return
-      }
-      for json in array {
-        let category = Category(json["strCategory"]!)
-        self.categories.append(category)
-      }
-      DispatchQueue.main.async {
-        completion(true)
-      }
-    }
-  }
-
-  func fetchDrinks(at id: Int, completion: @escaping () -> Void) {
-    let categoryName = categories[id].name
-    APIManager.shared.requestDrinks(of: categoryName) { (dict) in
-      guard let array = dict?["drinks"] as? [[String: String]] else {
-        return
-      }
-      for json in array {
-        let drink = Drink(
-          name: json["strDrink"]!,
-          thumb: json["strDrinkThumb"]!)
-        self.categories[id].drinks.append(drink)
-      }
-      DispatchQueue.main.async {
-        completion()
-      }
-    }
-  }
-}
-
 // MARK: - UICollectionViewDataSource, UICollectionViewDelegate
 extension DrinkController: UICollectionViewDataSource, UICollectionViewDelegate {
   func numberOfSections(in collectionView: UICollectionView) -> Int {
-    return categories.count
+    return APIManager.shared.categories.count
   }
 
   func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-    return categories[section].drinks.count
+    return APIManager.shared.categories[section].drinks.count
   }
 
   func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
     let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: "Header", for: indexPath) as! SectionHeader
-    header.textLabel.text = categories[indexPath.section].name
+    header.textLabel.text = APIManager.shared.categories[indexPath.section].name
     return header
   }
 
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! DrinkCell
-    let drink = categories[indexPath.section].drinks[indexPath.item]
+    let drink = APIManager.shared.categories[indexPath.section].drinks[indexPath.item]
     cell.titleLabel.text = drink.name
     downloadImage(from: drink.thumb) { (image) in
       cell.imageView.image = image
@@ -129,9 +88,9 @@ extension DrinkController: UICollectionViewDataSource, UICollectionViewDelegate 
 
   func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
     guard indexPath.section == lastCategoryId else { return }
-    if indexPath.item == categories[indexPath.section].drinks.count - 1 {
+    if indexPath.item == APIManager.shared.categories[indexPath.section].drinks.count - 1 {
       lastCategoryId += 1
-      fetchDrinks(at: lastCategoryId) {
+      APIManager.shared.fetchDrinks(withCategoryId: lastCategoryId) {
         DispatchQueue.main.async {
           self.collectionView.reloadData()
         }
