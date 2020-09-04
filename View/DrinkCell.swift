@@ -8,17 +8,13 @@
 
 import UIKit
 
-final class DrinkCell: UICollectionViewCell {
-  private let imageView: UIImageView = {
-    let imageView = UIImageView()
-    imageView.contentMode = .scaleAspectFill
-    return imageView
-  }()
+class DrinkCell: UICollectionViewCell {
+  private let imageView = WebImageView()
   private let titleLabel: UILabel = {
     let label = UILabel()
     label.font = .systemFont(ofSize: 16, weight: .regular)
-    label.textColor = .systemGray
     label.lineBreakMode = .byWordWrapping
+    label.textColor = .systemGray
     label.numberOfLines = 3
     return label
   }()
@@ -30,17 +26,7 @@ final class DrinkCell: UICollectionViewCell {
 
   func configure(with drink: Drink) {
     titleLabel.text = drink.name
-    fetchImage(from: drink.imageURL)
-  }
-
-  private func fetchImage(from urlString: String) {
-    guard let url = URL(string: "\(urlString)/preview") else { return }
-    URLSession.shared.dataTask(with: url) { (data, _, error) in
-      guard let data = data, error == nil else { return }
-      DispatchQueue.main.async {
-        self.imageView.image = UIImage(data: data)
-      }
-    }.resume()
+    imageView.loadFromUrlString(drink.imageURL)
   }
 
   private func setupSubviews() {

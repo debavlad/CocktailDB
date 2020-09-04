@@ -8,7 +8,7 @@
 
 import UIKit
 
-final class FilterController: UIViewController {
+class FilterController: UIViewController {
   var categories: [String] = []
   let collectionView: UICollectionView = {
     let layout = UICollectionViewFlowLayout()
@@ -67,7 +67,7 @@ extension FilterController: UICollectionViewDataSource, UICollectionViewDelegate
 
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! FilterCell
-    cell.titleLabel.text = categories[indexPath.item]
+    cell.textLabel.text = categories[indexPath.item]
     return cell
   }
 }

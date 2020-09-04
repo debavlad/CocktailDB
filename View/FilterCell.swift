@@ -8,19 +8,14 @@
 
 import UIKit
 
-final class FilterCell: UICollectionViewCell {
-  override var isSelected: Bool {
-    didSet {
-      checkImageView.isHidden = isSelected
-    }
-  }
-  let titleLabel: UILabel = {
+class FilterCell: UICollectionViewCell {
+  let textLabel: UILabel = {
     let label = UILabel()
     label.font = .systemFont(ofSize: 16)
     label.textColor = .systemGray
     return label
   }()
-  let checkImageView: UIImageView = {
+  private let checkImageView: UIImageView = {
     let image = UIImage(
       systemName: "checkmark",
       withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .regular))
@@ -28,6 +23,11 @@ final class FilterCell: UICollectionViewCell {
     imageView.tintColor = .label
     return imageView
   }()
+  override var isSelected: Bool {
+    didSet {
+      checkImageView.isHidden = isSelected
+    }
+  }
 
   override init(frame: CGRect) {
     super.init(frame: frame)
@@ -35,11 +35,11 @@ final class FilterCell: UICollectionViewCell {
   }
 
   func setupSubviews() {
-    addSubview(titleLabel)
-    titleLabel.translatesAutoresizingMaskIntoConstraints = false
+    addSubview(textLabel)
+    textLabel.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([
-      titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
-      titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 35)
+      textLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
+      textLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 35)
     ])
 
     addSubview(checkImageView)

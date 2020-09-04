@@ -8,8 +8,8 @@
 
 import UIKit
 
-final class SectionHeader: UICollectionReusableView {
-  private let textLabel: UILabel = {
+class CategoryHeader: UICollectionReusableView {
+  let titleLabel: UILabel = {
     let label = UILabel()
     label.font = .systemFont(ofSize: 14)
     label.textColor = .systemGray
@@ -21,16 +21,12 @@ final class SectionHeader: UICollectionReusableView {
     setupLabel()
   }
 
-  func configure(with category: Category) {
-    textLabel.text = category.name
-  }
-
   private func setupLabel() {
-    addSubview(textLabel)
-    textLabel.translatesAutoresizingMaskIntoConstraints = false
+    addSubview(titleLabel)
+    titleLabel.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([
-      textLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
-      textLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20)
+      titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
+      titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20)
     ])
   }
 

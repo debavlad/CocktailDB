@@ -8,20 +8,23 @@
 
 import UIKit
 
-final class DrinkController: UIViewController {
-  private let collectionView: UICollectionView = {
+let cache = NSCache<NSString, UIImage>()
+
+class DrinkController: UIViewController {
+  let collectionView: UICollectionView = {
     let layout = UICollectionViewFlowLayout()
     let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
     collectionView.register(DrinkCell.self, forCellWithReuseIdentifier: "Cell")
-    collectionView.register(SectionHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "Header")
+    collectionView.register(CategoryHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "Header")
     collectionView.backgroundColor = .systemBackground
     return collectionView
   }()
-  private var categories: [Category] = []
-  private var drinks: [String: [Drink]] = [:]
+  var categories: [Category] = []
+  var drinks: [Int: [Drink]] = [:]
 
   override func viewDidLoad() {
     super.viewDidLoad()
+    cache.countLimit = 200
     view.backgroundColor = .systemBackground
     setupCollectionView()
     requestInitialData()
@@ -46,7 +49,7 @@ final class DrinkController: UIViewController {
       let category = categories[0]
 
       APIManager.shared.fetchDrinks(of: category) { (drinks) in
-        self.drinks[category.name] = drinks
+        self.drinks[0] = drinks
         self.collectionView.reloadData()
       }
     }
@@ -60,22 +63,20 @@ extension DrinkController: UICollectionViewDataSource, UICollectionViewDelegate 
   }
 
   func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-    let category = categories[section]
-    return drinks[category.name]?.count ?? 0
+    return drinks[section]?.count ?? 0
   }
 
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! DrinkCell
-    let category = categories[indexPath.section]
-    if let drink = drinks[category.name]?[indexPath.item] {
+    if let drink = drinks[indexPath.section]?[indexPath.item] {
       cell.configure(with: drink)
     }
     return cell
   }
 
   func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
-    let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: "Header", for: indexPath) as! SectionHeader
-    header.configure(with: categories[indexPath.section])
+    let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: "Header", for: indexPath) as! CategoryHeader
+    header.titleLabel.text = categories[indexPath.section].name
     return header
   }
 
@@ -107,8 +108,7 @@ extension DrinkController: UICollectionViewDelegateFlowLayout {
   }
 
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-    let category = categories[section]
-    if let _ = drinks[category.name] {
+    if let _ = drinks[section] {
       return CGSize(width: 0, height: 60)
     } else {
       return .zero
