@@ -8,12 +8,11 @@
 
 import UIKit
 
-protocol FiltersApplying {
-  func filterDrinkCategories(at indexes: [Int])
+protocol DataReloading {
+  func reloadData()
 }
 
 class FilterController: UIViewController {
-  var categories: [Category] = []
   let navigationBar = CustomNavigationBar()
   let collectionView: UICollectionView = {
     let layout = UICollectionViewFlowLayout()
@@ -31,23 +30,29 @@ class FilterController: UIViewController {
     button.backgroundColor = .label
     return button
   }()
-  var delegate: FiltersApplying?
+
+  var categories: [Category] = []
+  var delegate: DataReloading?
+  var apiManager = APIManager.shared
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    categories = APIManager.shared.allCategories
     view.backgroundColor = .white
     transitioningDelegate = self
+
+    categories = apiManager.allCategories
     setupNavigationBar()
     setupCollectionView()
-    view.bringSubviewToFront(navigationBar)
     setupButton()
   }
 
   override func viewWillAppear(_ animated: Bool) {
-    print(APIManager.shared.filters)
-    for i in APIManager.shared.filters.sorted() {
-      collectionView.selectItem(at: IndexPath(item: i, section: 0), animated: false, scrollPosition: .top)
+    for i in 0..<categories.count {
+      guard apiManager.filters.contains(categories[i].name) else { continue }
+      collectionView.selectItem(
+        at: IndexPath(item: i, section: 0),
+        animated: false,
+        scrollPosition: .top)
     }
   }
 
@@ -97,11 +102,11 @@ class FilterController: UIViewController {
     guard let indexPaths = collectionView.indexPathsForSelectedItems else {
       return
     }
-    let indexes = indexPaths.map {
-      $0.item
+    let filters = indexPaths.map {
+      categories[$0.item].name
     }
-    delegate?.filterDrinkCategories(at: indexes)
-    APIManager.shared.filters = indexes
+    apiManager.filters = filters
+    delegate?.reloadData()
     backToDrinks()
   }
 }
@@ -125,7 +130,7 @@ extension FilterController: UICollectionViewDataSource, UICollectionViewDelegate
 
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! FilterCell
-    cell.textLabel.text = categories[indexPath.item].name
+    cell.configure(with: categories[indexPath.item])
     return cell
   }
 }

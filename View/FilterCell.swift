@@ -21,12 +21,11 @@ class FilterCell: UICollectionViewCell {
       withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .regular))
     let imageView = UIImageView(image: image)
     imageView.tintColor = .label
-    imageView.isHidden = true
     return imageView
   }()
   override var isSelected: Bool {
     didSet {
-      checkImageView.isHidden = !isSelected
+      checkImageView.isHidden = isSelected
     }
   }
 

@@ -10,8 +10,10 @@ import Foundation
 
 struct Category: Decodable {
   let name: String
+  var drinks: [Drink]?
 
   enum CodingKeys: String, CodingKey {
     case name = "strCategory"
+    case drinks
   }
 }

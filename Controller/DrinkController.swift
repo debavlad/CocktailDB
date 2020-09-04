@@ -10,7 +10,7 @@ import UIKit
 
 let cache = NSCache<NSString, UIImage>()
 
-class DrinkController: UIViewController {
+final class DrinkController: UIViewController {
   let navigationBar = CustomNavigationBar()
   let collectionView: UICollectionView = {
     let layout = UICollectionViewFlowLayout()
@@ -20,17 +20,19 @@ class DrinkController: UIViewController {
     collectionView.backgroundColor = .systemBackground
     return collectionView
   }()
+
+  let apiManager = APIManager.shared
   var categories: [Category] = []
-  var drinks: [Int: [Drink]] = [:]
+  var lastLoadedSectionId = 0
 
   override func viewDidLoad() {
     super.viewDidLoad()
     cache.countLimit = 200
     view.backgroundColor = .systemBackground
+
     setupNavigationBar()
     setupCollectionView()
-    view.bringSubviewToFront(navigationBar)
-    requestInitialData()
+    reloadData()
   }
 
   func setupNavigationBar() {
@@ -54,7 +56,7 @@ class DrinkController: UIViewController {
   func setupCollectionView() {
     collectionView.dataSource = self
     collectionView.delegate = self
-    view.addSubview(collectionView)
+    view.insertSubview(collectionView, at: 0)
     collectionView.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([
       collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -64,29 +66,7 @@ class DrinkController: UIViewController {
     ])
   }
 
-  func updateData() {
-    let category = categories[0]
-    APIManager.shared.fetchDrinks(of: category) { (drinks) in
-      self.drinks[0] = drinks
-      self.collectionView.reloadData()
-    }
-  }
-
-  func requestInitialData() {
-    APIManager.shared.fetchCategories { (categories) in
-      self.categories = categories
-      let category = categories[0]
-
-      APIManager.shared.fetchDrinks(of: category) { (drinks) in
-        self.drinks[0] = drinks
-        self.collectionView.reloadData()
-      }
-    }
-  }
-}
-
-@objc extension DrinkController {
-  func presentFilterController(sender: BarButton) {
+  @objc func presentFilterController(sender: BarButton) {
     let filterController = FilterController()
     filterController.delegate = self
     filterController.modalPresentationStyle = .fullScreen
@@ -94,14 +74,21 @@ class DrinkController: UIViewController {
   }
 }
 
-extension DrinkController: FiltersApplying {
-  func filterDrinkCategories(at indexes: [Int]) {
+// MARK: - DataReloading
+extension DrinkController: DataReloading {
+  func reloadData() {
+    lastLoadedSectionId = 0
     categories.removeAll()
-    drinks.removeAll()
-    for i in indexes.sorted() {
-      categories.append(APIManager.shared.allCategories[i])
+    apiManager.getCategoriesList { (categories) in
+      self.categories = categories
+      guard categories.count > 0 else {
+        return
+      }
+      self.apiManager.fetchCategory(categories[0]) { (drinks) in
+        self.categories[0].drinks = drinks
+        self.collectionView.reloadData()
+      }
     }
-    updateData()
   }
 }
 
@@ -112,12 +99,12 @@ extension DrinkController: UICollectionViewDataSource, UICollectionViewDelegate 
   }
 
   func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-    return drinks[section]?.count ?? 0
+    return categories[section].drinks?.count ?? 0
   }
 
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! DrinkCell
-    if let drink = drinks[indexPath.section]?[indexPath.item] {
+    if let drink = categories[indexPath.section].drinks?[indexPath.item] {
       cell.configure(with: drink)
     }
     return cell
@@ -130,25 +117,28 @@ extension DrinkController: UICollectionViewDataSource, UICollectionViewDelegate 
   }
 
   func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-    let lastCategoryId = drinks.count - 1
-    guard indexPath.section == lastCategoryId else { return }
-    let categoryId = lastCategoryId + 1
-    guard categories.count > categoryId else { return }
-    if indexPath.item == drinks[indexPath.section]!.count - 1 {
-      APIManager.shared.fetchDrinks(of: categories[lastCategoryId + 1]) { (drinks) in
-        self.drinks[indexPath.section + 1] = drinks
+    if reachedBottom(with: indexPath) && canFetchMore {
+      let nextCategory = categories[lastLoadedSectionId + 1]
+      apiManager.fetchCategory(nextCategory) { (drinks) in
+        self.categories[self.lastLoadedSectionId + 1].drinks = drinks
+        self.lastLoadedSectionId += 1
         DispatchQueue.main.async {
           self.collectionView.reloadData()
         }
       }
     }
-//    if indexPath.item == APIManager.shared.categories[indexPath.section].drinks.count - 1 {
-//      APIManager.shared.fetchDrinks(withCategoryId: lastCategoryId) {
-//        DispatchQueue.main.async {
-//          self.collectionView.reloadData()
-//        }
-//      }
-//    }
+  }
+
+  func reachedBottom(with indexPath: IndexPath) -> Bool {
+    guard let drinks = categories[lastLoadedSectionId].drinks else {
+      return false
+    }
+    return indexPath.section == lastLoadedSectionId &&
+      indexPath.item == drinks.count - 1
+  }
+
+  var canFetchMore: Bool {
+    return categories.count > lastLoadedSectionId + 1
   }
 }
 
@@ -167,7 +157,7 @@ extension DrinkController: UICollectionViewDelegateFlowLayout {
   }
 
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-    if let _ = drinks[section] {
+    if let _ = categories[section].drinks {
       return CGSize(width: 0, height: 60)
     } else {
       return .zero

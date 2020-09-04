@@ -11,11 +11,9 @@ import Foundation
 struct Drink: Decodable {
   let name: String
   let imageURL: String
-  let id: String
 
   enum CodingKeys: String, CodingKey {
     case name = "strDrink"
     case imageURL = "strDrinkThumb"
-    case id = "idDrink"
   }
 }
