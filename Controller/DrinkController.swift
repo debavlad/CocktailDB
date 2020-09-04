@@ -8,39 +8,26 @@
 
 import UIKit
 
-// TODO: Image cache
 final class DrinkController: UIViewController {
-  let collectionView: UICollectionView = {
+  private let collectionView: UICollectionView = {
     let layout = UICollectionViewFlowLayout()
-    layout.headerReferenceSize.height = 60
     let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
     collectionView.register(DrinkCell.self, forCellWithReuseIdentifier: "Cell")
     collectionView.register(SectionHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "Header")
     collectionView.backgroundColor = .systemBackground
     return collectionView
   }()
-  var lastCategoryId = 0
+  private var categories: [Category] = []
+  private var drinks: [String: [Drink]] = [:]
 
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = .systemBackground
     setupCollectionView()
-    setupBarButton()
-
-    APIManager.shared.fetchCategories {
-      APIManager.shared.fetchDrinks(withCategoryId: self.lastCategoryId) {
-        self.collectionView.reloadData()
-      }
-    }
+    requestInitialData()
   }
 
-  @objc func presentFilterController() {
-    let filterController = FilterController()
-    filterController.categories = APIManager.shared.categories.map { $0.name }
-    navigationController?.pushViewController(filterController, animated: true)
-  }
-
-  func setupCollectionView() {
+  private func setupCollectionView() {
     collectionView.dataSource = self
     collectionView.delegate = self
     view.addSubview(collectionView)
@@ -53,59 +40,55 @@ final class DrinkController: UIViewController {
     ])
   }
 
-  func setupBarButton() {
-    let barButton = UIBarButtonItem(image: UIImage(systemName: "line.horizontal.3.decrease.circle", withConfiguration: UIImage.SymbolConfiguration(pointSize: 19, weight: .light)), style: .plain, target: self, action: #selector(presentFilterController))
-    barButton.tintColor = .systemGray2
-    navigationItem.rightBarButtonItem = barButton
+  func requestInitialData() {
+    APIManager.shared.fetchCategories { (categories) in
+      self.categories = categories
+      let category = categories[0]
+
+      APIManager.shared.fetchDrinks(of: category) { (drinks) in
+        self.drinks[category.name] = drinks
+        self.collectionView.reloadData()
+      }
+    }
   }
 }
 
 // MARK: - UICollectionViewDataSource, UICollectionViewDelegate
 extension DrinkController: UICollectionViewDataSource, UICollectionViewDelegate {
   func numberOfSections(in collectionView: UICollectionView) -> Int {
-    return APIManager.shared.categories.count
+    return categories.count
   }
 
   func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-    return APIManager.shared.categories[section].drinks.count
-  }
-
-  func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
-    let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: "Header", for: indexPath) as! SectionHeader
-    header.textLabel.text = APIManager.shared.categories[indexPath.section].name
-    return header
+    let category = categories[section]
+    return drinks[category.name]?.count ?? 0
   }
 
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! DrinkCell
-    let drink = APIManager.shared.categories[indexPath.section].drinks[indexPath.item]
-    cell.titleLabel.text = drink.name
-    downloadImage(from: drink.thumb) { (image) in
-      cell.imageView.image = image
+    let category = categories[indexPath.section]
+    if let drink = drinks[category.name]?[indexPath.item] {
+      cell.configure(with: drink)
     }
     return cell
   }
 
-  func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-    guard indexPath.section == lastCategoryId else { return }
-    if indexPath.item == APIManager.shared.categories[indexPath.section].drinks.count - 1 {
-      lastCategoryId += 1
-      APIManager.shared.fetchDrinks(withCategoryId: lastCategoryId) {
-        DispatchQueue.main.async {
-          self.collectionView.reloadData()
-        }
-      }
-    }
+  func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+    let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: "Header", for: indexPath) as! SectionHeader
+    header.configure(with: categories[indexPath.section])
+    return header
   }
 
-  private func downloadImage(from urlString: String, completion: @escaping (UIImage?) -> Void) {
-    let url = URL(string: "\(urlString)/preview")!
-    URLSession.shared.dataTask(with: url) { data, response, error in
-      guard let data = data, error == nil else { return }
-      DispatchQueue.main.async {
-        completion(UIImage(data: data))
-      }
-    }.resume()
+  func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+    //    guard indexPath.section == lastCategoryId else { return }
+    //    if indexPath.item == APIManager.shared.categories[indexPath.section].drinks.count - 1 {
+    //      lastCategoryId += 1
+    //      APIManager.shared.fetchDrinks(withCategoryId: lastCategoryId) {
+    //        DispatchQueue.main.async {
+    //          self.collectionView.reloadData()
+    //        }
+    //      }
+    //    }
   }
 }
 
@@ -121,5 +104,14 @@ extension DrinkController: UICollectionViewDelegateFlowLayout {
 
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
     return 40
+  }
+
+  func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
+    let category = categories[section]
+    if let _ = drinks[category.name] {
+      return CGSize(width: 0, height: 60)
+    } else {
+      return .zero
+    }
   }
 }

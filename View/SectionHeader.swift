@@ -9,7 +9,7 @@
 import UIKit
 
 final class SectionHeader: UICollectionReusableView {
-  let textLabel: UILabel = {
+  private let textLabel: UILabel = {
     let label = UILabel()
     label.font = .systemFont(ofSize: 14)
     label.textColor = .systemGray
@@ -21,7 +21,11 @@ final class SectionHeader: UICollectionReusableView {
     setupLabel()
   }
 
-  func setupLabel() {
+  func configure(with category: Category) {
+    textLabel.text = category.name
+  }
+
+  private func setupLabel() {
     addSubview(textLabel)
     textLabel.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([

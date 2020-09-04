@@ -9,12 +9,12 @@
 import UIKit
 
 final class DrinkCell: UICollectionViewCell {
-  let imageView: UIImageView = {
+  private let imageView: UIImageView = {
     let imageView = UIImageView()
     imageView.contentMode = .scaleAspectFill
     return imageView
   }()
-  let titleLabel: UILabel = {
+  private let titleLabel: UILabel = {
     let label = UILabel()
     label.font = .systemFont(ofSize: 16, weight: .regular)
     label.textColor = .systemGray
@@ -26,6 +26,21 @@ final class DrinkCell: UICollectionViewCell {
   override init(frame: CGRect) {
     super.init(frame: frame)
     setupSubviews()
+  }
+
+  func configure(with drink: Drink) {
+    titleLabel.text = drink.name
+    fetchImage(from: drink.imageURL)
+  }
+
+  private func fetchImage(from urlString: String) {
+    guard let url = URL(string: "\(urlString)/preview") else { return }
+    URLSession.shared.dataTask(with: url) { (data, _, error) in
+      guard let data = data, error == nil else { return }
+      DispatchQueue.main.async {
+        self.imageView.image = UIImage(data: data)
+      }
+    }.resume()
   }
 
   private func setupSubviews() {

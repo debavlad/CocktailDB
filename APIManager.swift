@@ -10,18 +10,21 @@ import Foundation
 
 final class APIManager {
   static let shared = APIManager()
-  var categories: [Category] = []
+  
+  private let baseURL = "https://www.thecocktaildb.com/api/json/v1/1/"
+  private let categoriesURL = "list.php?c=list"
+  private let drinksURL = "filter.php?c="
 
-  typealias URLRequestHandler = ([[String: String]]?) -> Void
-  typealias CompletionBlock = (() -> Void)?
-
-  private func requestData(at url: URL, completion: @escaping URLRequestHandler) {
+  func fetchCategories(completion: @escaping ([Category]) -> Void) {
+    let urlString = baseURL + categoriesURL
+    guard let url = URL(string: urlString) else { return }
     URLSession.shared.dataTask(with: url) { (data, _, error) in
       guard let data = data, error == nil else { return }
       do {
-        if let dict = try JSONSerialization.jsonObject(
-          with: data, options: .allowFragments) as? [String: Any] {
-          completion(dict["drinks"] as? [[String: String]])
+        let decoder = JSONDecoder()
+        let json = try decoder.decode(CategoriesRoot.self, from: data)
+        DispatchQueue.main.async {
+          completion(json.categories)
         }
       } catch {
         print(error.localizedDescription)
@@ -29,31 +32,37 @@ final class APIManager {
     }.resume()
   }
 
-  func fetchDrinks(withCategoryId id: Int, completion: CompletionBlock = nil) {
-    guard categories.count > id else { return }
-    let category = categories[id].name.replacingOccurrences(of: " ", with: "_")
-    let url = URL(string: "https://www.thecocktaildb.com/api/json/v1/1/filter.php?c=\(category)")!
-    requestData(at: url) { (json) in
-      guard let json = json else { return }
-      self.categories[id].drinks = json.map {
-        Drink(name: $0["strDrink"]!, thumb: $0["strDrinkThumb"]!)
+  func fetchDrinks(of category: Category, completion: @escaping ([Drink]) -> Void) {
+    let formattedCategory = category.name.replacingOccurrences(of: " ", with: "_")
+    let urlString = baseURL + drinksURL + formattedCategory
+    guard let url = URL(string: urlString) else { return }
+    URLSession.shared.dataTask(with: url) { (data, _, error) in
+      guard let data = data, error == nil else { return }
+      do {
+        let decoder = JSONDecoder()
+        let json = try decoder.decode(DrinksRoot.self, from: data)
+        DispatchQueue.main.async {
+          completion(json.drinks)
+        }
+      } catch {
+        print(error.localizedDescription)
       }
-      DispatchQueue.main.async {
-        completion?()
-      }
+    }.resume()
+  }
+
+  private struct CategoriesRoot: Decodable {
+    let categories: [Category]
+
+    enum CodingKeys: String, CodingKey {
+      case categories = "drinks"
     }
   }
 
-  func fetchCategories(completion: CompletionBlock) {
-    let url = URL(string: "https://www.thecocktaildb.com/api/json/v1/1/list.php?c=list")!
-    requestData(at: url) { (json) in
-      guard let json = json else { return }
-      self.categories = json.map {
-        Category($0["strCategory"]!)
-      }
-      DispatchQueue.main.async {
-        completion?()
-      }
+  private struct DrinksRoot: Decodable {
+    let drinks: [Drink]
+
+    enum CodingKeys: String, CodingKey {
+      case drinks
     }
   }
 }
