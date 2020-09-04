@@ -10,6 +10,8 @@ import Foundation
 
 final class APIManager {
   static let shared = APIManager()
+  var allCategories: [Category] = []
+  var filters: [Int] = []
   
   private let baseURL = "https://www.thecocktaildb.com/api/json/v1/1/"
   private let categoriesURL = "list.php?c=list"
@@ -24,6 +26,8 @@ final class APIManager {
         let decoder = JSONDecoder()
         let json = try decoder.decode(CategoriesRoot.self, from: data)
         DispatchQueue.main.async {
+          self.filters = Array(0..<json.categories.count)
+          self.allCategories = json.categories
           completion(json.categories)
         }
       } catch {

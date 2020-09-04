@@ -64,6 +64,14 @@ class DrinkController: UIViewController {
     ])
   }
 
+  func updateData() {
+    let category = categories[0]
+    APIManager.shared.fetchDrinks(of: category) { (drinks) in
+      self.drinks[0] = drinks
+      self.collectionView.reloadData()
+    }
+  }
+
   func requestInitialData() {
     APIManager.shared.fetchCategories { (categories) in
       self.categories = categories
@@ -80,7 +88,6 @@ class DrinkController: UIViewController {
 @objc extension DrinkController {
   func presentFilterController(sender: BarButton) {
     let filterController = FilterController()
-    filterController.categories = categories
     filterController.delegate = self
     filterController.modalPresentationStyle = .fullScreen
     present(filterController, animated: true)
@@ -89,7 +96,12 @@ class DrinkController: UIViewController {
 
 extension DrinkController: FiltersApplying {
   func filterDrinkCategories(at indexes: [Int]) {
-    print("Okay")
+    categories.removeAll()
+    drinks.removeAll()
+    for i in indexes.sorted() {
+      categories.append(APIManager.shared.allCategories[i])
+    }
+    updateData()
   }
 }
 
@@ -118,15 +130,25 @@ extension DrinkController: UICollectionViewDataSource, UICollectionViewDelegate 
   }
 
   func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-    //    guard indexPath.section == lastCategoryId else { return }
-    //    if indexPath.item == APIManager.shared.categories[indexPath.section].drinks.count - 1 {
-    //      lastCategoryId += 1
-    //      APIManager.shared.fetchDrinks(withCategoryId: lastCategoryId) {
-    //        DispatchQueue.main.async {
-    //          self.collectionView.reloadData()
-    //        }
-    //      }
-    //    }
+    let lastCategoryId = drinks.count - 1
+    guard indexPath.section == lastCategoryId else { return }
+    let categoryId = lastCategoryId + 1
+    guard categories.count > categoryId else { return }
+    if indexPath.item == drinks[indexPath.section]!.count - 1 {
+      APIManager.shared.fetchDrinks(of: categories[lastCategoryId + 1]) { (drinks) in
+        self.drinks[indexPath.section + 1] = drinks
+        DispatchQueue.main.async {
+          self.collectionView.reloadData()
+        }
+      }
+    }
+//    if indexPath.item == APIManager.shared.categories[indexPath.section].drinks.count - 1 {
+//      APIManager.shared.fetchDrinks(withCategoryId: lastCategoryId) {
+//        DispatchQueue.main.async {
+//          self.collectionView.reloadData()
+//        }
+//      }
+//    }
   }
 }
 

@@ -35,12 +35,20 @@ class FilterController: UIViewController {
 
   override func viewDidLoad() {
     super.viewDidLoad()
+    categories = APIManager.shared.allCategories
     view.backgroundColor = .white
     transitioningDelegate = self
     setupNavigationBar()
     setupCollectionView()
     view.bringSubviewToFront(navigationBar)
     setupButton()
+  }
+
+  override func viewWillAppear(_ animated: Bool) {
+    print(APIManager.shared.filters)
+    for i in APIManager.shared.filters.sorted() {
+      collectionView.selectItem(at: IndexPath(item: i, section: 0), animated: false, scrollPosition: .top)
+    }
   }
 
   @objc private func backToDrinks() {
@@ -93,6 +101,7 @@ class FilterController: UIViewController {
       $0.item
     }
     delegate?.filterDrinkCategories(at: indexes)
+    APIManager.shared.filters = indexes
     backToDrinks()
   }
 }
