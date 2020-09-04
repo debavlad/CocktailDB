@@ -8,7 +8,7 @@
 
 import UIKit
 
-class CategoryHeader: UICollectionReusableView {
+final class CategoryHeader: UICollectionReusableView {
   let titleLabel: UILabel = {
     let label = UILabel()
     label.font = .systemFont(ofSize: 14)

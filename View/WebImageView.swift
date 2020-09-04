@@ -8,7 +8,7 @@
 
 import UIKit
 
-class WebImageView: UIImageView {
+final class WebImageView: UIImageView {
   private var imageUrlString: String?
 
   override init(frame: CGRect = .zero) {

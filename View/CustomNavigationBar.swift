@@ -8,7 +8,12 @@
 
 import UIKit
 
-class CustomNavigationBar: UIView {
+final class CustomNavigationBar: UIView {
+  let backButton: BarButton = {
+    let image = UIImage(named: "back")
+    let button = BarButton(image: image!)
+    return button
+  }()
   let titleLabel: UILabel = {
     let label = UILabel()
     label.font = .systemFont(ofSize: 24, weight: .semibold)
@@ -16,7 +21,6 @@ class CustomNavigationBar: UIView {
     label.textColor = .black
     return label
   }()
-  let backButton = BarButton(image: UIImage(named: "back")!)
   var rightBarButton: BarButton? {
     didSet {
       layoutRightBarButton()
@@ -25,12 +29,12 @@ class CustomNavigationBar: UIView {
 
   override init(frame: CGRect) {
     super.init(frame: frame)
-    backgroundColor = .white
     setupAppearance()
     setupSubviews()
   }
 
   private func setupAppearance() {
+    backgroundColor = .white
     layer.shadowColor = UIColor.black.cgColor
     layer.shadowOffset.height = 4
     layer.shadowRadius = 4
@@ -50,7 +54,9 @@ class CustomNavigationBar: UIView {
   }
 
   private func layoutRightBarButton() {
-    guard let rightBarButton = rightBarButton else { return }
+    guard let rightBarButton = rightBarButton else {
+      return
+    }
     addSubview(rightBarButton)
     rightBarButton.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([

@@ -8,7 +8,7 @@
 
 import UIKit
 
-class BarButton: UIButton {
+final class BarButton: UIButton {
   init(image: UIImage, target: Any? = nil, action: Selector? = nil) {
     super.init(frame: .zero)
     setImage(image, for: .normal)

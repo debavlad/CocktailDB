@@ -9,7 +9,7 @@
 import UIKit
 
 class FilterCell: UICollectionViewCell {
-  let textLabel: UILabel = {
+  private let textLabel: UILabel = {
     let label = UILabel()
     label.font = .systemFont(ofSize: 16)
     label.textColor = .systemGray
@@ -35,7 +35,11 @@ class FilterCell: UICollectionViewCell {
     setupSubviews()
   }
 
-  func setupSubviews() {
+  func configure(with category: Category) {
+    textLabel.text = category.name
+  }
+
+  private func setupSubviews() {
     addSubview(textLabel)
     textLabel.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([

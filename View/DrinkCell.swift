@@ -8,9 +8,9 @@
 
 import UIKit
 
-class DrinkCell: UICollectionViewCell {
+final class DrinkCell: UICollectionViewCell {
   private let imageView = WebImageView()
-  private let titleLabel: UILabel = {
+  private let textLabel: UILabel = {
     let label = UILabel()
     label.font = .systemFont(ofSize: 16, weight: .regular)
     label.lineBreakMode = .byWordWrapping
@@ -25,12 +25,12 @@ class DrinkCell: UICollectionViewCell {
   }
 
   func configure(with drink: Drink) {
-    titleLabel.text = drink.name
+    textLabel.text = drink.name
     imageView.loadFromUrlString(drink.imageURL)
   }
 
   private func setupSubviews() {
-    let stackView = UIStackView(arrangedSubviews: [imageView, titleLabel])
+    let stackView = UIStackView(arrangedSubviews: [imageView, textLabel])
     stackView.axis = .horizontal
     stackView.alignment = .center
     stackView.distribution = .fill
@@ -40,7 +40,7 @@ class DrinkCell: UICollectionViewCell {
     NSLayoutConstraint.activate([
       stackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
       stackView.centerYAnchor.constraint(equalTo: centerYAnchor),
-      titleLabel.widthAnchor.constraint(equalTo: widthAnchor, multiplier: 0.6),
+      textLabel.widthAnchor.constraint(equalTo: widthAnchor, multiplier: 0.6),
       imageView.widthAnchor.constraint(equalTo: heightAnchor),
       imageView.heightAnchor.constraint(equalTo: heightAnchor)
     ])
