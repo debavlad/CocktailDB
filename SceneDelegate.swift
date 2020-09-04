@@ -17,6 +17,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     if let windowScene = scene as? UIWindowScene {
       let window = UIWindow(windowScene: windowScene)
       let drinkController = DrinkController()
+      APIManager.shared.deviceNotchInset = window.safeAreaInsets.top
       window.rootViewController = drinkController
 
       self.window = window

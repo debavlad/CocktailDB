@@ -11,7 +11,7 @@ import UIKit
 final class BarButton: UIButton {
   init(image: UIImage, target: Any? = nil, action: Selector? = nil) {
     super.init(frame: .zero)
-    setImage(image, for: .normal)
+    setImage(image.withTintColor(.label), for: .normal)
     if let target = target, let action = action {
       addTarget(target, action: action, for: .touchUpInside)
     }

@@ -10,15 +10,14 @@ import UIKit
 
 final class CustomNavigationBar: UIView {
   let backButton: BarButton = {
-    let image = UIImage(named: "back")
+    let image = UIImage(named: "back")?.withTintColor(.label)
     let button = BarButton(image: image!)
     return button
   }()
   let titleLabel: UILabel = {
     let label = UILabel()
     label.font = .systemFont(ofSize: 24, weight: .semibold)
-    label.text = "Drinks"
-    label.textColor = .black
+    label.textColor = .label
     return label
   }()
   var rightBarButton: BarButton? {
@@ -34,8 +33,8 @@ final class CustomNavigationBar: UIView {
   }
 
   private func setupAppearance() {
-    backgroundColor = .white
-    layer.shadowColor = UIColor.black.cgColor
+    backgroundColor = .systemBackground
+    layer.shadowColor = UIColor.label.cgColor
     layer.shadowOffset.height = 4
     layer.shadowRadius = 4
     layer.shadowOpacity = 0.25

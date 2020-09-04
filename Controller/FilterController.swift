@@ -37,7 +37,7 @@ class FilterController: UIViewController {
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    view.backgroundColor = .white
+    view.backgroundColor = .systemBackground
     transitioningDelegate = self
 
     categories = apiManager.allCategories
@@ -56,19 +56,16 @@ class FilterController: UIViewController {
     }
   }
 
-  @objc private func backToDrinks() {
-    dismiss(animated: true)
-  }
-
   func setupNavigationBar() {
+    navigationBar.titleLabel.text = "Filters"
     navigationBar.backButton.addTarget(self, action: #selector(backToDrinks), for: .touchUpInside)
     view.addSubview(navigationBar)
     navigationBar.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([
       navigationBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-      navigationBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+      navigationBar.topAnchor.constraint(equalTo: view.topAnchor),
       navigationBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-      navigationBar.heightAnchor.constraint(equalToConstant: 70)
+      navigationBar.heightAnchor.constraint(equalToConstant: 70 + apiManager.deviceNotchInset)
     ])
   }
 
@@ -76,7 +73,7 @@ class FilterController: UIViewController {
     collectionView.allowsMultipleSelection = true
     collectionView.dataSource = self
     collectionView.delegate = self
-    view.addSubview(collectionView)
+    view.insertSubview(collectionView, at: 0)
     collectionView.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([
       collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -97,7 +94,10 @@ class FilterController: UIViewController {
       applyButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -27)
     ])
   }
+}
 
+// MARK: - Target actions
+@objc extension FilterController {
   @objc func applyFilters() {
     guard let indexPaths = collectionView.indexPathsForSelectedItems else {
       return
@@ -109,9 +109,13 @@ class FilterController: UIViewController {
     delegate?.reloadData()
     backToDrinks()
   }
+
+  @objc private func backToDrinks() {
+    dismiss(animated: true)
+  }
 }
 
-//MARK: - UIViewControllerTransitioningDelegate
+// MARK: - UIViewControllerTransitioningDelegate
 extension FilterController: UIViewControllerTransitioningDelegate {
   func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
     return AnimationController(duration: 0.48, type: .present)
@@ -126,6 +130,27 @@ extension FilterController: UIViewControllerTransitioningDelegate {
 extension FilterController: UICollectionViewDataSource, UICollectionViewDelegate {
   func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
     return categories.count
+  }
+
+  func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    updateApplyButton()
+  }
+
+  func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
+    updateApplyButton()
+  }
+
+  private func updateApplyButton() {
+    guard let indexPaths = collectionView.indexPathsForSelectedItems else {
+      return
+    }
+    if indexPaths.count == categories.count {
+      applyButton.backgroundColor = .secondaryLabel
+      applyButton.isEnabled = false
+    } else {
+      applyButton.backgroundColor = .label
+      applyButton.isEnabled = true
+    }
   }
 
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {

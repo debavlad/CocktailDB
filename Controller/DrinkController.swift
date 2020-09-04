@@ -36,14 +36,15 @@ final class DrinkController: UIViewController {
   }
 
   func setupNavigationBar() {
+    navigationBar.titleLabel.text = "Drinks"
     navigationBar.backButton.isHidden = true
     view.addSubview(navigationBar)
     navigationBar.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([
       navigationBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-      navigationBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+      navigationBar.topAnchor.constraint(equalTo: view.topAnchor),
       navigationBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-      navigationBar.heightAnchor.constraint(equalToConstant: 70)
+      navigationBar.heightAnchor.constraint(equalToConstant: 70 + apiManager.deviceNotchInset)
     ])
 
     let filterBarButton = BarButton(
@@ -87,6 +88,7 @@ extension DrinkController: DataReloading {
       self.apiManager.fetchCategory(categories[0]) { (drinks) in
         self.categories[0].drinks = drinks
         self.collectionView.reloadData()
+        self.collectionView.setContentOffset(.zero, animated: false)
       }
     }
   }

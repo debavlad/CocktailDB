@@ -6,12 +6,14 @@
 //  Copyright © 2020 debavlad. All rights reserved.
 //
 
-import Foundation
+import UIKit
 
 final class APIManager {
   static let shared = APIManager()
   var allCategories: [Category] = []
   var filters: [String] = []
+
+  var deviceNotchInset: CGFloat = 0
 
   var filteredCategories: [Category] {
     var filteredCategories: [Category] = []
