@@ -17,8 +17,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     if let windowScene = scene as? UIWindowScene {
       let window = UIWindow(windowScene: windowScene)
       let drinkController = DrinkController()
-      let navigationController = UINavigationController(rootViewController: drinkController)
-      window.rootViewController = navigationController
+      window.rootViewController = drinkController
 
       self.window = window
       window.makeKeyAndVisible()

@@ -22,7 +22,6 @@ class WebImageView: UIImageView {
     image = nil
 
     if let imageFromCache = cache.object(forKey: urlString as NSString) {
-      print("Loaded \(imageFromCache) from cache")
       image = imageFromCache
       return
     }
@@ -34,7 +33,6 @@ class WebImageView: UIImageView {
           self.image = imageToCache
         }
         cache.setObject(imageToCache!, forKey: urlString as NSString)
-        print("Cached \(imageToCache)")
       }
     }.resume()
   }

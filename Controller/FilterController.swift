@@ -8,8 +8,13 @@
 
 import UIKit
 
+protocol FiltersApplying {
+  func filterDrinkCategories(at indexes: [Int])
+}
+
 class FilterController: UIViewController {
-  var categories: [String] = []
+  var categories: [Category] = []
+  let navigationBar = CustomNavigationBar()
   let collectionView: UICollectionView = {
     let layout = UICollectionViewFlowLayout()
     layout.sectionInset.bottom = 100
@@ -26,11 +31,32 @@ class FilterController: UIViewController {
     button.backgroundColor = .label
     return button
   }()
+  var delegate: FiltersApplying?
 
   override func viewDidLoad() {
     super.viewDidLoad()
+    view.backgroundColor = .white
+    transitioningDelegate = self
+    setupNavigationBar()
     setupCollectionView()
+    view.bringSubviewToFront(navigationBar)
     setupButton()
+  }
+
+  @objc private func backToDrinks() {
+    dismiss(animated: true)
+  }
+
+  func setupNavigationBar() {
+    navigationBar.backButton.addTarget(self, action: #selector(backToDrinks), for: .touchUpInside)
+    view.addSubview(navigationBar)
+    navigationBar.translatesAutoresizingMaskIntoConstraints = false
+    NSLayoutConstraint.activate([
+      navigationBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+      navigationBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+      navigationBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+      navigationBar.heightAnchor.constraint(equalToConstant: 70)
+    ])
   }
 
   func setupCollectionView() {
@@ -41,7 +67,7 @@ class FilterController: UIViewController {
     collectionView.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([
       collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-      collectionView.topAnchor.constraint(equalTo: view.topAnchor),
+      collectionView.topAnchor.constraint(equalTo: navigationBar.bottomAnchor),
       collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
       collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
     ])
@@ -49,6 +75,7 @@ class FilterController: UIViewController {
 
   func setupButton() {
     view.addSubview(applyButton)
+    applyButton.addTarget(self, action: #selector(applyFilters), for: .touchUpInside)
     applyButton.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([
       applyButton.widthAnchor.constraint(equalTo: view.widthAnchor, constant: -54),
@@ -56,6 +83,28 @@ class FilterController: UIViewController {
       applyButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
       applyButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -27)
     ])
+  }
+
+  @objc func applyFilters() {
+    guard let indexPaths = collectionView.indexPathsForSelectedItems else {
+      return
+    }
+    let indexes = indexPaths.map {
+      $0.item
+    }
+    delegate?.filterDrinkCategories(at: indexes)
+    backToDrinks()
+  }
+}
+
+//MARK: - UIViewControllerTransitioningDelegate
+extension FilterController: UIViewControllerTransitioningDelegate {
+  func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+    return AnimationController(duration: 0.48, type: .present)
+  }
+
+  func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+    return AnimationController(duration: 0.48, type: .dismiss)
   }
 }
 
@@ -67,7 +116,7 @@ extension FilterController: UICollectionViewDataSource, UICollectionViewDelegate
 
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! FilterCell
-    cell.textLabel.text = categories[indexPath.item]
+    cell.textLabel.text = categories[indexPath.item].name
     return cell
   }
 }

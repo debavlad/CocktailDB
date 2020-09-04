@@ -11,6 +11,7 @@ import UIKit
 let cache = NSCache<NSString, UIImage>()
 
 class DrinkController: UIViewController {
+  let navigationBar = CustomNavigationBar()
   let collectionView: UICollectionView = {
     let layout = UICollectionViewFlowLayout()
     let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -26,18 +27,38 @@ class DrinkController: UIViewController {
     super.viewDidLoad()
     cache.countLimit = 200
     view.backgroundColor = .systemBackground
+    setupNavigationBar()
     setupCollectionView()
+    view.bringSubviewToFront(navigationBar)
     requestInitialData()
   }
 
-  private func setupCollectionView() {
+  func setupNavigationBar() {
+    navigationBar.backButton.isHidden = true
+    view.addSubview(navigationBar)
+    navigationBar.translatesAutoresizingMaskIntoConstraints = false
+    NSLayoutConstraint.activate([
+      navigationBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+      navigationBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+      navigationBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+      navigationBar.heightAnchor.constraint(equalToConstant: 70)
+    ])
+
+    let filterBarButton = BarButton(
+      image: UIImage(named: "filter")!,
+      target: self,
+      action: #selector(presentFilterController(sender:)))
+    navigationBar.rightBarButton = filterBarButton
+  }
+
+  func setupCollectionView() {
     collectionView.dataSource = self
     collectionView.delegate = self
     view.addSubview(collectionView)
     collectionView.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([
       collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-      collectionView.topAnchor.constraint(equalTo: view.topAnchor),
+      collectionView.topAnchor.constraint(equalTo: navigationBar.bottomAnchor),
       collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
       collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
     ])
@@ -53,6 +74,22 @@ class DrinkController: UIViewController {
         self.collectionView.reloadData()
       }
     }
+  }
+}
+
+@objc extension DrinkController {
+  func presentFilterController(sender: BarButton) {
+    let filterController = FilterController()
+    filterController.categories = categories
+    filterController.delegate = self
+    filterController.modalPresentationStyle = .fullScreen
+    present(filterController, animated: true)
+  }
+}
+
+extension DrinkController: FiltersApplying {
+  func filterDrinkCategories(at indexes: [Int]) {
+    print("Okay")
   }
 }
 
