@@ -16,8 +16,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
   func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
     if let windowScene = scene as? UIWindowScene {
       let window = UIWindow(windowScene: windowScene)
+      
+      CustomNavigationBar.notchInset = window.safeAreaInsets.top
       let drinkController = DrinkController()
-      APIManager.shared.deviceNotchInset = window.safeAreaInsets.top
       window.rootViewController = drinkController
 
       self.window = window

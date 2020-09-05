@@ -9,25 +9,27 @@
 import UIKit
 
 final class DrinkCell: UICollectionViewCell {
+
+  var drink: Drink? {
+    didSet {
+      if let drink = drink {
+        textLabel.text = drink.name
+        imageView.loadFromUrlString(drink.imageURL)
+        setupSubviews()
+      }
+    }
+  }
+
   private let imageView = WebImageView()
+
   private let textLabel: UILabel = {
     let label = UILabel()
-    label.font = .systemFont(ofSize: 16, weight: .regular)
-    label.lineBreakMode = .byWordWrapping
+    label.font = .systemFont(ofSize: 16)
     label.textColor = .systemGray
+    label.lineBreakMode = .byWordWrapping
     label.numberOfLines = 3
     return label
   }()
-
-  override init(frame: CGRect) {
-    super.init(frame: frame)
-    setupSubviews()
-  }
-
-  func configure(with drink: Drink) {
-    textLabel.text = drink.name
-    imageView.loadFromUrlString(drink.imageURL)
-  }
 
   private func setupSubviews() {
     let stackView = UIStackView(arrangedSubviews: [imageView, textLabel])
@@ -45,8 +47,5 @@ final class DrinkCell: UICollectionViewCell {
       imageView.heightAnchor.constraint(equalTo: heightAnchor)
     ])
   }
-
-  required init?(coder: NSCoder) {
-    fatalError()
-  }
+  
 }

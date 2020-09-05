@@ -8,35 +8,38 @@
 
 import UIKit
 
-class FilterCell: UICollectionViewCell {
-  private let textLabel: UILabel = {
-    let label = UILabel()
-    label.font = .systemFont(ofSize: 16)
-    label.textColor = .systemGray
-    return label
-  }()
-  private let checkImageView: UIImageView = {
-    let image = UIImage(
-      systemName: "checkmark",
-      withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .regular))
-    let imageView = UIImageView(image: image)
-    imageView.tintColor = .label
-    return imageView
-  }()
+final class FilterCell: UICollectionViewCell {
+
+  var category: Category? {
+    didSet {
+      if let category = category {
+        textLabel.text = category.name
+        setupSubviews()
+      }
+    }
+  }
+
   override var isSelected: Bool {
     didSet {
       checkImageView.isHidden = isSelected
     }
   }
 
-  override init(frame: CGRect) {
-    super.init(frame: frame)
-    setupSubviews()
-  }
+  private let textLabel: UILabel = {
+    let label = UILabel()
+    label.font = .systemFont(ofSize: 16)
+    label.textColor = .systemGray
+    return label
+  }()
 
-  func configure(with category: Category) {
-    textLabel.text = category.name
-  }
+  private let checkImageView: UIImageView = {
+    let image = UIImage(
+      systemName: "checkmark",
+      withConfiguration: UIImage.SymbolConfiguration(pointSize: 20))
+    let imageView = UIImageView(image: image)
+    imageView.tintColor = .label
+    return imageView
+  }()
 
   private func setupSubviews() {
     addSubview(textLabel)
@@ -54,7 +57,4 @@ class FilterCell: UICollectionViewCell {
     ])
   }
 
-  required init?(coder: NSCoder) {
-    fatalError()
-  }
 }

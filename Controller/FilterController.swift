@@ -12,8 +12,8 @@ protocol DataReloading {
   func reloadData()
 }
 
-class FilterController: UIViewController {
-  let navigationBar = CustomNavigationBar()
+final class FilterController: UIViewController {
+  
   let collectionView: UICollectionView = {
     let layout = UICollectionViewFlowLayout()
     layout.sectionInset.bottom = 100
@@ -22,6 +22,9 @@ class FilterController: UIViewController {
     collectionView.backgroundColor = .systemBackground
     return collectionView
   }()
+
+  let navigationBar = CustomNavigationBar()
+
   let applyButton: UIButton = {
     let button = UIButton()
     button.setTitle("APPLY", for: .normal)
@@ -33,14 +36,13 @@ class FilterController: UIViewController {
 
   var categories: [Category] = []
   var delegate: DataReloading?
-  var apiManager = APIManager.shared
 
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = .systemBackground
     transitioningDelegate = self
 
-    categories = apiManager.allCategories
+    categories = API.shared.categories
     setupNavigationBar()
     setupCollectionView()
     setupButton()
@@ -48,7 +50,9 @@ class FilterController: UIViewController {
 
   override func viewWillAppear(_ animated: Bool) {
     for i in 0..<categories.count {
-      guard apiManager.filters.contains(categories[i].name) else { continue }
+      guard API.shared.hasFilter(categories[i]) else {
+        continue
+      }
       collectionView.selectItem(
         at: IndexPath(item: i, section: 0),
         animated: false,
@@ -58,14 +62,19 @@ class FilterController: UIViewController {
 
   func setupNavigationBar() {
     navigationBar.titleLabel.text = "Filters"
-    navigationBar.backButton.addTarget(self, action: #selector(backToDrinks), for: .touchUpInside)
+    navigationBar.backButton.addTarget(
+      self,
+      action: #selector(backToDrinks),
+      for: .touchUpInside)
+
     view.addSubview(navigationBar)
     navigationBar.translatesAutoresizingMaskIntoConstraints = false
+    let height = 70 + CustomNavigationBar.notchInset
     NSLayoutConstraint.activate([
       navigationBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
       navigationBar.topAnchor.constraint(equalTo: view.topAnchor),
       navigationBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-      navigationBar.heightAnchor.constraint(equalToConstant: 70 + apiManager.deviceNotchInset)
+      navigationBar.heightAnchor.constraint(equalToConstant: height)
     ])
   }
 
@@ -99,30 +108,16 @@ class FilterController: UIViewController {
 // MARK: - Target actions
 @objc extension FilterController {
   @objc func applyFilters() {
-    guard let indexPaths = collectionView.indexPathsForSelectedItems else {
-      return
-    }
-    let filters = indexPaths.map {
+    let filters = collectionView.indexPathsForSelectedItems?.map {
       categories[$0.item].name
     }
-    apiManager.filters = filters
+    API.shared.setFilters(filters)
     delegate?.reloadData()
     backToDrinks()
   }
 
   @objc private func backToDrinks() {
     dismiss(animated: true)
-  }
-}
-
-// MARK: - UIViewControllerTransitioningDelegate
-extension FilterController: UIViewControllerTransitioningDelegate {
-  func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-    return AnimationController(duration: 0.48, type: .present)
-  }
-
-  func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-    return AnimationController(duration: 0.48, type: .dismiss)
   }
 }
 
@@ -141,10 +136,11 @@ extension FilterController: UICollectionViewDataSource, UICollectionViewDelegate
   }
 
   private func updateApplyButton() {
-    guard let indexPaths = collectionView.indexPathsForSelectedItems else {
+    guard let selectedItems = collectionView.indexPathsForSelectedItems else {
       return
     }
-    if indexPaths.count == categories.count {
+
+    if selectedItems.count == categories.count {
       applyButton.backgroundColor = .secondaryLabel
       applyButton.isEnabled = false
     } else {
@@ -155,7 +151,7 @@ extension FilterController: UICollectionViewDataSource, UICollectionViewDelegate
 
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! FilterCell
-    cell.configure(with: categories[indexPath.item])
+    cell.category = categories[indexPath.item]
     return cell
   }
 }
@@ -172,5 +168,16 @@ extension FilterController: UICollectionViewDelegateFlowLayout {
 
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
     return 0
+  }
+}
+
+// MARK: - UIViewControllerTransitioningDelegate
+extension FilterController: UIViewControllerTransitioningDelegate {
+  func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+    return AnimationController(duration: 0.48, type: .present)
+  }
+
+  func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+    return AnimationController(duration: 0.48, type: .dismiss)
   }
 }

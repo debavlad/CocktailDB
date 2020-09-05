@@ -9,6 +9,9 @@
 import UIKit
 
 final class CustomNavigationBar: UIView {
+
+  static var notchInset: CGFloat = 0
+
   let backButton: BarButton = {
     let image = UIImage(named: "back")?.withTintColor(.label)
     let button = BarButton(image: image!)
